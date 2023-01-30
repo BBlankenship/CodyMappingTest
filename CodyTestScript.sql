@@ -1,7 +1,7 @@
 --Added a USe assuming the DB name will be the same
 USE [CodyMappingTraining]
 
---Need to decalre a table instead of INTO Add logic to check if Temp table already exists too
+--Need to declare a table instead of INTO Add logic to check if Temp table already exists too
 
 DROP TABLE IF EXISTS #PhoneNumbers 
 SELECT Id 
@@ -32,7 +32,7 @@ SET PhoneNumber = CASE
 UPDATE #PhoneNumbers
 SET PhoneNumber =  '('+STUFF(PhoneNumber, CHARINDEX('-',PhoneNumber),LEN('-'),') ')
 
---Same as above;Need to decalre a table instead of INTO Add logic to check if Temp table already exists too
+--Same as above; Need to declare a table instead of INTO Add logic to check if Temp table already exists too
 DROP TABLE IF EXISTS #CleanedPhoneNumbers 
 SELECT PersonId,
 MAX(CASE WHEN Type = 'Home' THEN PhoneNumber END) AS HomePhone,
@@ -48,6 +48,45 @@ GROUP BY PersonId
 
 --Could list the columns out if there was a need for clarity
 INSERT INTO [dst].[Mastname]
+(           [Recnum]
+           ,[FName]
+           ,[MName]
+           ,[LName]
+           ,[Suffix]
+           ,[Age]
+           ,[House]
+           ,[Street]
+           ,[City]
+           ,[State]
+           ,[Zip]
+           ,[ZipExtension]
+           ,[Height]
+           ,[Weight]
+           ,[Ethnicity_Code]
+           ,[Ethnicity_Desc]
+           ,[Race_Code]
+           ,[Race_Desc]
+           ,[Build_Code]
+           ,[Build_Desc]
+           ,[Complexion_Code]
+           ,[Complexion_Desc]
+           ,[EyeColor_Code]
+           ,[EyeColor_Desc]
+           ,[Sex_Code]
+           ,[Sex_Desc]
+           ,[HairColor_Code]
+           ,[HairColor_Desc]
+           ,[SSN]
+           ,[DRLic]
+           ,[DRLic_StateCode]
+           ,[DRLic_StateDesc]
+           ,[Passport]
+           ,[Phone1]
+           ,[Phone1_Extension]
+           ,[Phone2]
+           ,[Phone2_Extension]
+           ,[Phone3]
+           ,[Phone3_Extension])
  --Recnum - I don't know what this is. I am going to assume it's an incremental number that needs to increase from the last one for now. 
  --If it is based on value from source, I don't see it
  --Other methods maybe be better if there lots of inserting happening, but this should work in this test case
@@ -57,7 +96,8 @@ INSERT INTO [dst].[Mastname]
        pt.MiddleName,
        pt.LastName,
        pt.NameSufx,
-       pt.Age,	   
+       pt.Age,
+	   --This works with this data but have to be aware of 112A Street name potential. It might be better to look first first space CHARINDEX(' ',pt.Zip)
        LEFT(pt.Street,patindex('%[^0-9]%', pt.Street)-1) House,
        SUBSTRING(pt.Street,patindex('%[^0-9]%', pt.Street)+1,len(pt.Street)) Street,
        pt.City,
@@ -141,20 +181,20 @@ INSERT INTO [dst].[Mastname]
              WHEN 'Wyoming' THEN 'WY' 
                  ELSE NULL
              END StateAbbrv
-,DriversLicenseState
-,Passport
-
-/*
-Probably needs to be made into a function. Probably would create something called fnCleanPhoneNumber but here is the brute force method since this is a one off. Probably strip off any extensions. 
-Get just numbers and then see if there is a country code included (number len). If so, grab the right 10 numbers. 
-You can do the preferred formatting in the function or format the 10 numbers returned in the desired format
-*/
-,cpn.HomePhone
-, cpn.HomeExtension
-,cpn.CellPhone 
-,cpn.CellExtension
-,cpn.WorkPhone
-,cpn.WorkExtension
+       ,DriversLicenseState
+       ,Passport
+       
+       /*	   
+       Probably could be made into a function if this is a common occurence. Probably would create something called fnCleanPhoneNumber. Probably strip off any extensions. 
+       Get just numbers and then see if there is a country code included (number len). If so, grab the right 10 numbers. 
+       You can do the preferred formatting in the function or format the 10 numbers returned in the desired format
+       */
+       ,cpn.HomePhone
+       , cpn.HomeExtension
+       ,cpn.CellPhone 
+       ,cpn.CellExtension
+       ,cpn.WorkPhone
+       ,cpn.WorkExtension
   FROM [src].[PersonTable] pt 
   INNER JOIN [src].[PersonIdentifierTable] pit ON pit.PersonId = pt.id
   CROSS APPLY (SELECT top 1 * FROM [src].[PersonPhysicalFeatureTable] ppf WHERE pt.Id = ppf.PersonId ORDER BY ppf.AsOfDate DESC) ppf
