@@ -97,7 +97,7 @@ INSERT INTO [dst].[Mastname]
        pt.LastName,
        pt.NameSufx,
        pt.Age,
-	   --This works with this data but have to be aware of 112A Street name potential. It might be better to look first first space CHARINDEX(' ',pt.Zip)
+	   --This works with this data but have to be aware of the potential of a 112A Street Name (not in this data). It might be better to look first first space CHARINDEX(' ',pt.Street)
        LEFT(pt.Street,patindex('%[^0-9]%', pt.Street)-1) House,
        SUBSTRING(pt.Street,patindex('%[^0-9]%', pt.Street)+1,len(pt.Street)) Street,
        pt.City,
